@@ -13,7 +13,12 @@ from werkzeug.wsgi import wrap_file
 from raginei import Application, render, render_text, route, request, local, \
   response_middleware, template_filter, current_app, abort_if
 
-application = Application.instance()
+if True: #develop
+  config = dict(jinja2_loader='jinja2.FileSystemLoader')
+else: #production
+  config = dict(jinja2_loader='raginei.jinja2loader.FileSystemLoader')
+
+application = Application.instance(**config)
 
 
 @route('/')

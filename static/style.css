@@ -2299,3 +2299,8 @@ li a.btn-icon-bottom, .bar a.btn-icon-bottom, .bar a.btn-icon-bottom {
 }
 
 /* Tuningathon */
+#content {
+	width: 800px;
+	margin: 0 auto;
+}
+
