@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<style type="text/css">
+.pickup {
+	float: left;
+	width: 200px;
+	height: 200px;
+}
+.result {
+	float: left;
+	width: 150px;
+	height: 150px;
+}
+</style>
+
+{% for result in results %}
+
+	<div class="{{ 'pickup' if 10 >= loop.index else 'result' }}">
+		<div class="name">{{ result[0] }}</div>
+		<div class="score">{{ result[1]|format_score }}</div>
+		<div class="updated">{{ result[2]|time_to_date }}</div>
+	</div>
+
+{% endfor %}
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+$(document).ready(function(){
+	setTimeout(function(){
+		location.href = location.href;
+	}, 10 * 1000);
+});
+</script>
+{% endblock %}
