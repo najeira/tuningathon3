@@ -1,0 +1,20 @@
+License
+=======
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+
+Depends on
+==========
+
+Werkzeug
+https://github.com/mitsuhiko/werkzeug
+
+Jinja2
+https://github.com/mitsuhiko/jinja2
+
+Raginei
+https://github.com/najeira/raginei
+
+python-memcached
+http://www.tummy.com/Community/software/python-memcached/
