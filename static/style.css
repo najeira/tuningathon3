@@ -280,8 +280,12 @@ em {
 	cursor: pointer;
 }
 
-/* UI parts */
-.navbar {
+/* Tuningathon */
+#content {
+	width: 820px;
+	margin: 0 auto;
+}
+#header {
 	position: relative;
 	overflow: hidden;
 	width: 100%;
@@ -299,24 +303,18 @@ em {
 	-moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 }
-.navbar h1 {
+#header h1 {
 	color: #ffffff;
 	outline: 0 !important;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	padding-left: 5px;
-	margin-right: 90px;
 	font-size: 16px;
-	line-height: 48px;
-}
-.navbar h1 a {
-	color: #ffffff;
-}
-
-/* Tuningathon */
-#content {
-	width: 820px;
+	line-height: 32px;
+	width: 800px;
 	margin: 0 auto;
+}
+#header h1 a {
+	color: #ffffff;
 }
 #footer {
 	width: 800px;
@@ -326,7 +324,6 @@ em {
 }
 #results {
 	width: 810px;
-	padding: 0 0 0 10px;
 }
 #results .name {
 	color: #3a87ad;
@@ -399,10 +396,11 @@ em {
 }
 #times {
 	margin: 10px 0 15px 0;
-	padding: 0 0 0 20px;
+	padding: 0 0 0 10px;
 	font-weight: bold;
 	font-size: 24px;
 	line-height: 24px;
+	text-align: center;
 }
 #times .label {
 	font-size: 18px;
@@ -414,7 +412,7 @@ em {
 	top: 2px;
 }
 #cur_time {
-	margin: 0 15px 0 0;
+	margin: 0 30px 0 0;
 }
 #left_time {
 }

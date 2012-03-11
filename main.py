@@ -31,7 +31,7 @@ def memoize(expiry=300):
       key = cache_key(func, *args, **kwds)
       now = time.time()
       data = None
-      if expiry and cache:
+      if expiry and cache and config.memoize:
         data_tuple = cache.get(key)
         if data_tuple:
           rnd = random.randint(-rng, rng)
