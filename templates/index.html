@@ -55,7 +55,7 @@ $(document).ready(function(){
 	
 	var $results = $("#results");
 	setInterval(function(){
-		$results.load("/", function(){
+		$results.load("/?ajax=true", function(){
 		});
 	}, 30 * 1000);
 });

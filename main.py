@@ -7,31 +7,64 @@ import sqlite3
 import posixpath
 import mimetypes
 import random
+import functools
 from zlib import adler32
 from optparse import OptionParser
 from werkzeug.local import LocalProxy
 from werkzeug.wsgi import wrap_file
 from raginei import Application, render, render_text, route, request, local, \
-  response_middleware, template_filter, current_app, abort_if
+  response_middleware, template_filter, current_app, abort_if, fetch
+from raginei.cache import cache_key
 
 import config
-
 application = Application.instance(**config.config)
+
+import memcache
+cache = memcache.Client(['127.0.0.1:11211'])
+
+
+def memoize(expiry=300):
+  rng = int(expiry / 5)
+  def _decorator(func):
+    @functools.wraps(func)
+    def _wrapper(*args, **kwds):
+      key = cache_key(func, *args, **kwds)
+      now = time.time()
+      data = None
+      if expiry and cache:
+        data_tuple = cache.get(key)
+        if data_tuple:
+          rnd = random.randint(-rng, rng)
+          if data_tuple[1] >= int(now + rnd):
+            data = data_tuple[0]
+      if data is None:
+        data = func(*args, **kwds)
+        if expiry and cache:
+          exp_time = int(now + expiry)
+          cache.set(key, (data, exp_time), expiry + rng)
+      return data
+    return _wrapper
+  return _decorator
 
 
 @route('/')
 def index():
+  template = 'results' if request.is_xhr else 'index'
+  return index_impl(template)
+
+
+@memoize(30)
+def index_impl(template):
   c = db.cursor()
   sql = u"""SELECT * FROM result ORDER BY score DESC, updated DESC;"""
   results = c.execute(sql)
-  template = 'results' if request.is_xhr else 'index'
-  return render(template, results=results)
+  return fetch(template, results=results)
 
 
 @route('/history/<remote_addr>')
 def show_history(remote_addr):
   c = db.cursor()
-  sql = u"""SELECT * FROM history WHERE name = ?ORDER BY updated DESC LIMIT 20;"""
+  sql = u"""SELECT * FROM history WHERE name = ? ORDER BY updated DESC LIMIT 20;"""
   results = c.execute(sql, [remote_addr])
   return render('history', results=results, remote_addr=remote_addr)
 
@@ -60,7 +93,7 @@ def send_file(filename):
   mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
   rv = current_app.response_class(data, mimetype=mimetype, direct_passthrough=True)
   mtime = os.path.getmtime(filename)
-  if mtime is not None:
+  if mtime:
     rv.date = int(mtime)
   rv.cache_control.public = True
   cache_timeout = 3600
@@ -174,19 +207,18 @@ def remote_addr_name(remote_addr):
 
 def main():
   parser = OptionParser()
-  parser.add_option("-r", "--run", action="store_true", dest="is_run",
-    default=False, help="Run server")
+  #parser.add_option("-r", "--run", action="store_true", dest="is_run",
+  #  default=False, help="Run server")
   parser.add_option("-i", "--init", action="store_true", dest="is_init",
     default=False, help="Init database")
   parser.add_option("-t", "--t", action="store_true", dest="is_test",
     default=False, help="Load testdata")
   options, args = parser.parse_args()
-  if options.is_run:
-    return run_server()
-  elif options.is_init:
+  if options.is_init:
     return init_database()
   elif options.is_test:
     return load_test_data()
+  return run_server()
 
 
 if __name__ == '__main__':

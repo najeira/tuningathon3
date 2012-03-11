@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-if True: #develop
+debug = True
+
+if debug: #develop
   config = dict(jinja2_loader='jinja2.FileSystemLoader')
 else: #production
   config = dict(jinja2_loader='raginei.jinja2loader.FileSystemLoader')
