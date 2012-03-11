@@ -1,0 +1,10 @@
+{% for result in results %}
+	<div class="{{ 'pickup' if 10 >= loop.index else 'result' }}">
+		<div class="name">
+			<span class="rank">{{ loop.index }}:</span>
+			{{ link(result[0]|remote_addr_name, 'show_history', remote_addr=result[0]) }}
+		</div>
+		<div class="score">{{ result[1]|format_score }}</div>
+		<div class="updated">{{ result[2]|time_to_date }}</div>
+	</div>
+{% endfor %}

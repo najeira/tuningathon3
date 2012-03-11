@@ -6,6 +6,7 @@ import datetime
 import sqlite3
 import posixpath
 import mimetypes
+import random
 from zlib import adler32
 from optparse import OptionParser
 from werkzeug.local import LocalProxy
@@ -13,12 +14,9 @@ from werkzeug.wsgi import wrap_file
 from raginei import Application, render, render_text, route, request, local, \
   response_middleware, template_filter, current_app, abort_if
 
-if True: #develop
-  config = dict(jinja2_loader='jinja2.FileSystemLoader')
-else: #production
-  config = dict(jinja2_loader='raginei.jinja2loader.FileSystemLoader')
+import config
 
-application = Application.instance(**config)
+application = Application.instance(**config.config)
 
 
 @route('/')
@@ -26,21 +24,25 @@ def index():
   c = db.cursor()
   sql = u"""SELECT * FROM result ORDER BY score DESC, updated DESC;"""
   results = c.execute(sql)
-  return render('index', results=results)
+  template = 'results' if request.is_xhr else 'index'
+  return render(template, results=results)
 
 
 @route('/history/<remote_addr>')
 def show_history(remote_addr):
   c = db.cursor()
-  sql = u"""SELECT * FROM history ORDER BY updated DESC LIMIT 100;"""
-  results = c.execute(sql)
-  return render('history', results=results)
+  sql = u"""SELECT * FROM history WHERE name = ?ORDER BY updated DESC LIMIT 20;"""
+  results = c.execute(sql, [remote_addr])
+  return render('history', results=results, remote_addr=remote_addr)
 
 
 @route('/post_result')
 def post_result():
-  insert_result()
-  return render_text('OK')
+  ra = request.remote_addr
+  if ra.startswith('10.') or ra.startswith('127.'):
+    insert_result()
+    return render_text('OK')
+  return render_text('NG')
 
 
 @route('/static/<path:filename>')
@@ -77,6 +79,10 @@ def insert_result():
   now = long(time.time())
   values = (request.remote_addr, float(request.args.get('score') or 0), now)
   insert_result_impl(values)
+  if 0 == random.randint(0, 100):
+    c = db.cursor()
+    c.execute("""VACUUM;""")
+    db.commit()
 
 
 def insert_result_impl(values):
@@ -112,7 +118,8 @@ def open_db():
     if not local.db:
       raise AttributeError()
   except (KeyError, AttributeError):
-    local.db = sqlite3.connect("data.db")
+    local.db = sqlite3.connect(os.path.join(
+      os.path.dirname(os.path.abspath(__file__)), 'data.db'))
   return local.db
 
 
@@ -134,13 +141,18 @@ def run_server():
 
 
 def load_test_data():
-  import random
   c = db.cursor()
   c.execute(u"""DELETE FROM history;""")
   c.execute(u"""DELETE FROM result;""")
   now = time.time()
-  for i in xrange(60):
-    insert_result_impl( ('10.0.0.%d' % i, random.randint(1, 1000), now) )
+  for j in xrange(100):
+    for i in xrange(60):
+      values = ('10.0.0.%d' % i, random.randint(1, 1000), now - j * 10)
+      print values
+      insert_result_impl( values )
+  db.commit()
+  c = db.cursor()
+  c.execute("""VACUUM;""")
   db.commit()
 
 
@@ -153,6 +165,11 @@ def time_to_date(unix_time):
 @template_filter
 def format_score(score):
   return '%.3f' % score
+
+
+@template_filter
+def remote_addr_name(remote_addr):
+  return config.remote_addr_names.get(remote_addr) or remote_addr
 
 
 def main():

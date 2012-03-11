@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h2 style="padding:0 20px;">{{ remote_addr|remote_addr_name }}</h2>
+<div id="history" style="width:800px;height:300px;"></div>
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+google.load('visualization', '1', {'packages': ['corechart']});
+google.setOnLoadCallback(function(){
+	var data = new google.visualization.DataTable();
+	data.addColumn('string', 'Time');
+	data.addColumn('number', 'Score');
+	data.addRows([
+		{%- for result in results -%}
+			["{{ result[2]|time_to_date }}", {{ result[1]|format_score }}]{{ '' if loop.last else ',' }}
+		{%- endfor -%}
+	]);
+	var chart = new google.visualization.LineChart(document.getElementById('history'));
+	chart.draw(data);
+});
+</script>
+{% endblock %}

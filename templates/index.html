@@ -2,39 +2,62 @@
 
 {% block content %}
 
-<style type="text/css">
-.pickup {
-	float: left;
-	width: 200px;
-	height: 200px;
-}
-.result {
-	float: left;
-	width: 150px;
-	height: 150px;
-}
-</style>
+<div id="times">
+	<span class="label label-info">現在時刻</span>
+	<span id="cur_time">00:00:00</span>
+	<span class="label label-warning">残り時間</span>
+	<span id="left_time">00:00:00</span>
+</div>
 
-{% for result in results %}
-
-	<div class="{{ 'pickup' if 10 >= loop.index else 'result' }}">
-		<div class="name">{{ result[0] }}</div>
-		<div class="score">{{ result[1]|format_score }}</div>
-		<div class="updated">{{ result[2]|time_to_date }}</div>
-	</div>
-
-{% endfor %}
+<div id="results" class="clearfix">
+	{% include "results.html" %}
+</div>
 
 {% endblock %}
 
 {% block script %}
 <script type="text/javascript">
 $(document).ready(function(){
-/*
-	setTimeout(function(){
-		location.href = location.href;
-	}, 10 * 1000);
-*/
+	var deadline = new Date();
+	deadline.setHours(19);
+	deadline.setMinutes(0);
+	deadline.setSeconds(0);
+	var $cur_time = $("#cur_time");
+	var $left_time = $("#left_time");
+	
+	function zeroPadding(str) {
+		str = String(str);
+		if (str.length >= 2) {
+			return str;
+		}
+		return "0" + str;
+	}
+	function timeDiff(t1, t2) {
+		var diff = Math.floor((t1.getTime() - t2.getTime()) / 1000);
+		if (0 >= diff) {
+			return "00:00:00";
+		}
+		var h = Math.floor(diff / 3600);
+		var m = Math.floor(diff % 3600 / 60);
+		var s = diff % 60;
+		return zeroPadding(h) + ":" + zeroPadding(m) + ":" + zeroPadding(s);
+	}
+	function updateTime() {
+		var now = new Date();
+		$cur_time.text(zeroPadding(now.getHours()) + ":" + 
+			zeroPadding(now.getMinutes()) + ":" + 
+			zeroPadding(now.getSeconds()));
+		$left_time.text(timeDiff(deadline, now));
+	}
+	
+	updateTime();
+	setInterval(updateTime, 5 * 1000);
+	
+	var $results = $("#results");
+	setInterval(function(){
+		$results.load("/", function(){
+		});
+	}, 30 * 1000);
 });
 </script>
 {% endblock %}
