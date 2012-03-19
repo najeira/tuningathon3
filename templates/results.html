@@ -1,5 +1,5 @@
 {% for result in results %}
-	<div class="{{ 'pickup' if 10 >= loop.index else 'result' }}">
+	<div class="{{ 'pickup' if 12 >= loop.index else 'result' }}">
 		<div class="name">
 			<span class="rank">{{ loop.index }}:</span>
 			{{ link(result[0]|remote_addr_name, 'show_history', remote_addr=result[0]) }}

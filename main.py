@@ -4,14 +4,10 @@ import os
 import time
 import datetime
 import sqlite3
-import posixpath
-import mimetypes
 import random
 import functools
-from zlib import adler32
 from optparse import OptionParser
 from werkzeug.local import LocalProxy
-from werkzeug.wsgi import wrap_file
 from raginei import Application, render, render_text, route, request, local, \
   response_middleware, template_filter, current_app, abort_if, fetch
 from raginei.cache import cache_key
@@ -72,50 +68,24 @@ def show_history(remote_addr):
 @route('/post_result')
 def post_result():
   ra = request.remote_addr
-  if ra.startswith('10.') or ra.startswith('127.'):
+  if ra.startswith('10.') or ra.startswith('127.') or ra.startswith('175.'):
     insert_result()
     return render_text('OK')
   return render_text('NG')
 
 
-@route('/static/<path:filename>')
-def static_file(filename):
-  return send_file(filename)
-
-
-def send_file(filename):
-  filename = posixpath.normpath(filename)
-  abort_if(filename.startswith(('/', '../')))
-  filename = os.path.join(current_app.project_root, 'static', filename)
-  abort_if(not os.path.isfile(filename))
-  file = open(filename, 'rb')
-  data = wrap_file(request.environ, file)
-  mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
-  rv = current_app.response_class(data, mimetype=mimetype, direct_passthrough=True)
-  mtime = os.path.getmtime(filename)
-  if mtime:
-    rv.date = int(mtime)
-  rv.cache_control.public = True
-  cache_timeout = 3600
-  rv.cache_control.max_age = cache_timeout
-  rv.expires = int(time.time() + cache_timeout)
-  rv.set_etag('%s-%s-%s' % (
-    mtime,
-    os.path.getsize(filename),
-    adler32(filename) & 0xffffffff
-  ))
-  rv = rv.make_conditional(request)
-  return rv
-
-
 def insert_result():
   now = long(time.time())
-  values = (request.remote_addr, float(request.args.get('score') or 0), now)
+  values = (request.remote_addr, float(request.form.get('score') or 0), now)
   insert_result_impl(values)
   if 0 == random.randint(0, 100):
-    c = db.cursor()
-    c.execute("""VACUUM;""")
-    db.commit()
+    vacuum_db()
+
+
+def vacuum_db():
+  c = db.cursor()
+  c.execute("""VACUUM;""")
+  db.commit()
 
 
 def insert_result_impl(values):
@@ -127,7 +97,7 @@ def insert_result_impl(values):
   db.commit()
 
 
-def init_database():
+def init_db():
   c = db.cursor()
   c.execute(u"""
 CREATE TABLE IF NOT EXISTS history (
@@ -173,25 +143,31 @@ def run_server():
   application.run(port=5050)
 
 
-def load_test_data():
+def insert_test_data():
   c = db.cursor()
-  c.execute(u"""DELETE FROM history;""")
-  c.execute(u"""DELETE FROM result;""")
   now = time.time()
-  for j in xrange(100):
-    for i in xrange(60):
-      values = ('10.0.0.%d' % i, random.randint(1, 1000), now - j * 10)
-      print values
-      insert_result_impl( values )
+  for i in xrange(60):
+    values = ('175.41.237.%d' % i, random.randint(10, 200), now)
+    insert_result_impl( values )
   db.commit()
   c = db.cursor()
   c.execute("""VACUUM;""")
   db.commit()
 
 
+def delete_data():
+  c = db.cursor()
+  c.execute(u"""DELETE FROM history;""")
+  c.execute(u"""DELETE FROM result;""")
+  db.commit()
+  vacuum_db()
+
+
 @template_filter
 def time_to_date(unix_time):
   dt = datetime.datetime.fromtimestamp(unix_time)
+  from raginei.timezone import jst
+  dt = jst(dt)
   return dt.strftime('%H:%M:%S')
 
 
@@ -209,15 +185,33 @@ def main():
   parser = OptionParser()
   #parser.add_option("-r", "--run", action="store_true", dest="is_run",
   #  default=False, help="Run server")
-  parser.add_option("-i", "--init", action="store_true", dest="is_init",
+  
+  parser.add_option("--init", action="store_true", dest="is_init",
     default=False, help="Init database")
-  parser.add_option("-t", "--t", action="store_true", dest="is_test",
-    default=False, help="Load testdata")
+  
+  parser.add_option("--test", action="store_true", dest="is_test",
+    default=False, help="Insert testdata")
+  
+  parser.add_option("--delete", action="store_true", dest="is_delete_data",
+    default=False, help="Delete data")
+  
+  parser.add_option("--vacuum", action="store_true", dest="is_vacuum",
+    default=False, help="Vacuum database")
+  
   options, args = parser.parse_args()
+  
   if options.is_init:
-    return init_database()
+    return init_db()
+    
   elif options.is_test:
-    return load_test_data()
+    return insert_test_data()
+    
+  elif options.is_delete_data:
+    return delete_data()
+    
+  elif options.is_vacuum:
+    return vacuum_db()
+  
   return run_server()
 
 

@@ -16,7 +16,7 @@ google.setOnLoadCallback(function(){
 	data.addColumn('string', 'Time');
 	data.addColumn('number', 'Score');
 	data.addRows([
-		{%- for result in results -%}
+		{%- for result in results|reverse -%}
 			["{{ result[2]|time_to_date }}", {{ result[1]|format_score }}]{{ '' if loop.last else ',' }}
 		{%- endfor -%}
 	]);
