@@ -68,10 +68,8 @@ def show_history(remote_addr):
 @route('/post_result')
 def post_result():
   ra = request.remote_addr
-  if ra.startswith('10.') or ra.startswith('127.') or ra.startswith('175.'):
-    insert_result()
-    return render_text('OK')
-  return render_text('NG')
+  insert_result()
+  return render_text('OK')
 
 
 def insert_result():

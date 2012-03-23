@@ -12,7 +12,7 @@ try:
 except ImportError:
   from StringIO import StringIO
 
-SCORE_HOST = '175.41.237.139'
+SCORE_HOST = '54.248.125.199'
 URL_TXT = '/home/ec2-user/url.txt'
 HTTP_LOAD = '/home/ec2-user/http_load'
 DEFAULT_SECONDS = 10
@@ -21,7 +21,7 @@ PATH_GET = '/blojsom/blog/default/2012/03/23/test'
 PATH_POST = '/blojsom/blog/default/2012/03/23/test'
 PARAMS_POST = {
   'comment': 'y',
-  'entry_id': '2',
+  'entry_id': '1',
   'permalink': 'test',
   'redirect_to': PATH_GET,
   'author': 'test',
@@ -281,6 +281,7 @@ def parse_status_lines(lines):
 
 
 def send_score(score):
+  return #for admin's benchmark
   r = http_post(SCORE_HOST, '/post_result', {'score': score}, timeout=3)
   if r:
     print 'Score sending was succeeded.'

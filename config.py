@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-debug = True
-memoize = False
+debug = False
+memoize = True
 
 if debug: #develop
   config = dict(jinja2_loader='jinja2.FileSystemLoader')
