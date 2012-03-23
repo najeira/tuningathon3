@@ -225,9 +225,9 @@ def parse_http_load_result(lines, seconds):
     raise ValueError()
   fetches = int(lines[0].split(',')[0].split(' ')[0])
   num_ok, num_err = parse_status_lines(statuses)
-  assert num_ok + num_err == fetches
-  succeeds_percent = num_ok / fetches
-  assert 1.0 >= succeeds_percent
+  #assert num_ok + num_err == fetches
+  #succeeds_percent = num_ok / fetches
+  #assert 1.0 >= succeeds_percent
   elapsed = float(lines[0].split(' in ')[-1].split(' ')[0])
   return float(num_ok) / elapsed
 
@@ -281,7 +281,7 @@ def parse_status_lines(lines):
 
 
 def send_score(score):
-  return #for admin's benchmark
+  #return #for admin's benchmark
   r = http_post(SCORE_HOST, '/post_result', {'score': score}, timeout=3)
   if r:
     print 'Score sending was succeeded.'
