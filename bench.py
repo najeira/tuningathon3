@@ -12,7 +12,7 @@ try:
 except ImportError:
   from StringIO import StringIO
 
-SCORE_HOST = '54.248.125.199'
+SCORE_HOST = '127.0.0.1'
 URL_TXT = '/home/ec2-user/url.txt'
 HTTP_LOAD = '/home/ec2-user/http_load'
 DEFAULT_SECONDS = 10
@@ -281,7 +281,7 @@ def parse_status_lines(lines):
 
 
 def send_score(score):
-  #return #for admin's benchmark
+  return #for admin's benchmark
   r = http_post(SCORE_HOST, '/post_result', {'score': score}, timeout=3)
   if r:
     print 'Score sending was succeeded.'
