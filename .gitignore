@@ -2,9 +2,3 @@
 .idea
 *.pyc
 *.db
-jinja2
-jinja2/*
-werkzeug
-werkzeug/*
-raginei
-raginei/*
